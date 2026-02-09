@@ -15,8 +15,7 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter, display)
                 if abs(z) > 2:
                     temp.append(i)
                     break
-            else:
-                temp.append(max_iter)
+            temp.append(max_iter)
         saved_iter.append(temp)
 
     plt.imshow(saved_iter, cmap="hot")
