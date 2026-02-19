@@ -80,4 +80,13 @@ def benchmark (func, *args, n_runs=3):
         f"(min={min(times):.4f}, max={max(times):.4f})")
     return median_t, result
 
-t, M = benchmark(compute_asfortranarray, A)
+
+# -2, 1, -1.5, 1.5, 1024, 1024, 100, display=False
+t, M = benchmark(compute_mandelbrotv2, -2, 1, -1.5, 1.5, 4096, 4096, 100, False)
+
+#Milestone 4
+# 256 = 0.0506s
+# 512 = 0.3069s
+# 1024 = 1.2093s
+# 2048 = 4.6193s
+# 4096 = 18.5580s
