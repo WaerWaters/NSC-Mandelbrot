@@ -15,7 +15,8 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter, display)
                 if abs(z) > 2:
                     temp.append(i)
                     break
-            temp.append(max_iter)
+            else:
+                temp.append(max_iter)
         saved_iter.append(temp)
     
     if display:
@@ -49,6 +50,23 @@ def compute_mandelbrotv2(xmin, xmax, ymin, ymax, width, height, max_iter, displa
    
     return 
 
+N = 10000
+A = numpy.random.rand(N, N)
+
+# Quick: 0.1445s
+def compute_row_sums(A):
+    for i in range(N):
+        s = numpy.sum(A[i, :])
+
+# Slower than row sums: 0.4936s
+def compute_column_sums(A):
+    for j in range(N):
+        s = numpy.sum(A[:, j])
+
+# Slower than row sums and column sums: 0.6464s
+def compute_asfortranarray(A):
+    A_f = numpy.asfortranarray(A)
+
 
 def benchmark (func, *args, n_runs=3):
     """ Time func , return median of n_runs . """
@@ -62,4 +80,4 @@ def benchmark (func, *args, n_runs=3):
         f"(min={min(times):.4f}, max={max(times):.4f})")
     return median_t, result
 
-t, M = benchmark(compute_mandelbrotv2, -2, 1, -1.5, 1.5, 1024, 1024, 100, False)
+t, M = benchmark(compute_asfortranarray, A)
