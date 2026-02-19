@@ -63,9 +63,18 @@ def compute_column_sums(A):
     for j in range(N):
         s = numpy.sum(A[:, j])
 
-# Slower than row sums and column sums: 0.6464s
-def compute_asfortranarray(A):
-    A_f = numpy.asfortranarray(A)
+        
+A_f = numpy.asfortranarray(A)
+
+# Faster than normal row-major: 0.1319s
+def compute_asfortranarray_row_sums(A_f):
+    for i in range(N):
+        s = numpy.sum(A[i, :])
+
+# The same speed as normal column-major: 0.4912s
+def compute_asfortranarray_column_sums(A_f):
+    for j in range(N):
+        s = numpy.sum(A[:, j])
 
 
 def benchmark (func, *args, n_runs=3):
@@ -82,7 +91,7 @@ def benchmark (func, *args, n_runs=3):
 
 
 # -2, 1, -1.5, 1.5, 1024, 1024, 100, display=False
-t, M = benchmark(compute_mandelbrotv2, -2, 1, -1.5, 1.5, 4096, 4096, 100, False)
+t, M = benchmark(compute_asfortranarray_column_sums, A_f)
 
 #Milestone 4
 # 256 = 0.0506s
