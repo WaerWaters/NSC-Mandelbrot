@@ -63,18 +63,17 @@ def compute_column_sums(A):
     for j in range(N):
         s = numpy.sum(A[:, j])
 
-        
-A_f = numpy.asfortranarray(A)
 
-# Faster than normal row-major: 0.1319s
+A_f = numpy.asfortranarray(A)
+# Slower than normal row-major: 0.5058s
 def compute_asfortranarray_row_sums(A_f):
     for i in range(N):
-        s = numpy.sum(A[i, :])
+        s = numpy.sum(A_f[i, :])
 
-# The same speed as normal column-major: 0.4912s
+# Faster than norma column-major: 0.1402s
 def compute_asfortranarray_column_sums(A_f):
     for j in range(N):
-        s = numpy.sum(A[:, j])
+        s = numpy.sum(A_f[:, j])
 
 
 def benchmark (func, *args, n_runs=3):
@@ -91,7 +90,7 @@ def benchmark (func, *args, n_runs=3):
 
 
 # -2, 1, -1.5, 1.5, 1024, 1024, 100, display=False
-t, M = benchmark(compute_asfortranarray_column_sums, A_f)
+t, M = benchmark(compute_asfortranarray_row_sums, A_f)
 
 #Milestone 4
 # 256 = 0.0506s
