@@ -28,7 +28,7 @@ def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter, di
     return saved_iter
 
 
-def compute_mandelbrot_numpy(xmin, xmax, ymin, ymax, width, height, max_iter, display):
+def compute_mandelbrot_numpy(xmin, xmax, ymin, ymax, width, height, max_iter, dtype=numpy.float64, display=False):
     x = numpy.linspace(xmin, xmax, width)
     y = numpy.linspace(ymin, ymax, height)
     X, Y = numpy.meshgrid(x, y)
@@ -82,3 +82,15 @@ def compute_mandelbrot_naive_numba(xmin, xmax, ymin, ymax, width, height, max_it
                 z = z*z + c; n += 1
             result[i, j] = n
     return result
+
+@njit
+def compute_mandelbrot_numba_typed(xmin, xmax, ymin, ymax, width, height, max_iter, dtype=numpy.float64, display=False):
+    x = numpy.linspace(xmin, xmax, width)
+    y = numpy.linspace(ymin, ymax, height)
+    result = numpy.zeros((height, width), dtype=numpy.int32)
+    for i in range(height):
+        for j in range(width):
+            c = x[j] + 1j * y[i]
+            result[i, j] = compute_mandelbrot_point_numba(c, max_iter)
+    return result
+
