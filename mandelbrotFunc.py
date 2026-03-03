@@ -1,8 +1,8 @@
 import numpy
 import matplotlib.pyplot as plt
-from numba import njit
+from numba import njit, jit, prange
 
-def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter, display):
+def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter, display=False):
     saved_iter = []
     for x in numpy.linspace(xmin, xmax, width):
         temp = []
@@ -89,6 +89,28 @@ def compute_mandelbrot_numba_typed(xmin, xmax, ymin, ymax, width, height, max_it
     y = numpy.linspace(ymin, ymax, height)
     result = numpy.zeros((height, width), dtype=numpy.int32)
     for i in range(height):
+        for j in range(width):
+            c = x[j] + 1j * y[i]
+            result[i, j] = compute_mandelbrot_point_numba(c, max_iter)
+    return result
+
+@jit
+def compute_mandelbrot_numba_typed_jit(xmin, xmax, ymin, ymax, width, height, max_iter, dtype=numpy.float64, display=False):
+    x = numpy.linspace(xmin, xmax, width)
+    y = numpy.linspace(ymin, ymax, height)
+    result = numpy.zeros((height, width), dtype=numpy.int32)
+    for i in range(height):
+        for j in range(width):
+            c = x[j] + 1j * y[i]
+            result[i, j] = compute_mandelbrot_point_numba(c, max_iter)
+    return result
+
+@njit(parallel=True)
+def compute_mandelbrot_numba_parallel(xmin, xmax, ymin, ymax, width, height, max_iter, dtype=numpy.float64, display=False):
+    x = numpy.linspace(xmin, xmax, width)
+    y = numpy.linspace(ymin, ymax, height)
+    result = numpy.zeros((height, width), dtype=numpy.int32)
+    for i in prange(height):
         for j in range(width):
             c = x[j] + 1j * y[i]
             result[i, j] = compute_mandelbrot_point_numba(c, max_iter)
