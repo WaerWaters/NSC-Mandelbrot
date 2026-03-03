@@ -1,7 +1,7 @@
 import time, statistics
 import numpy
 
-def benchmark (func, *args, n_runs=3):
+def benchmark(func, *args, n_runs=3):
     """ Time func , return median of n_runs . """
     times = []
     for _ in range(n_runs):
@@ -38,3 +38,12 @@ def compute_asfortranarray_row_sums(A_f):
 def compute_asfortranarray_column_sums(A_f):
     for j in range(N):
         s = numpy.sum(A_f[:, j])
+
+def bench(fn, *args, runs=5):
+    fn(*args)
+    times = []
+    for _ in range(runs):
+        t0 = time.perf_counter()
+        fn(*args)
+        times.append(time.perf_counter() - t0)
+    return statistics.median(times)

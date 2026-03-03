@@ -1,7 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
+from numba import njit
 
-@profile
 def compute_mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter, display):
     saved_iter = []
     for x in numpy.linspace(xmin, xmax, width):
@@ -48,3 +48,37 @@ def compute_mandelbrot_numpy(xmin, xmax, ymin, ymax, width, height, max_iter, di
         plt.show()
    
     return 
+
+@njit
+def compute_mandelbrot_point_numba(c, max_iter=100):
+    z = 0j
+    for n in range(max_iter):
+        if z.real*z.real + z.imag*z.imag > 4.0:
+            return n
+        z = z*z + c
+    return max_iter
+
+def compute_mandelbrot_hybrid(xmin, xmax, ymin, ymax, width, height, max_iter, display=False):
+    x = numpy.linspace(xmin, xmax, width)
+    y = numpy.linspace(ymin, ymax, height)
+    result = numpy.zeros((height, width), dtype=numpy.int32)
+    for i in range(height):
+        for j in range(width):
+            c = x[j] + 1j * y[i]
+            result[i, j] = compute_mandelbrot_point_numba(c, max_iter)
+    return result
+
+@njit
+def compute_mandelbrot_naive_numba(xmin, xmax, ymin, ymax, width, height, max_iter, display=False):
+    x = numpy.linspace(xmin, xmax, width)
+    y = numpy.linspace(ymin, ymax, height)
+    result = numpy.zeros((height, width), dtype=numpy.int32)
+    for i in range(height):
+        for j in range(width):
+            c = x[j] + 1j * y[i]
+            z = 0j
+            n = 0
+            while n < max_iter and z.real*z.real+z.imag*z.imag <= 4.0:
+                z = z*z + c; n += 1
+            result[i, j] = n
+    return result
