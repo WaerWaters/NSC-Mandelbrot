@@ -60,7 +60,7 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
     
     return np.vstack(parts)
 
-
+"""
 if __name__ == '__main__':
     result = mandelbrot_parallel(1024, -2.5, 1.0, -1.25, 1.25, n_workers=4, n_chunks=4*4)
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -70,37 +70,41 @@ if __name__ == '__main__':
     out = Path(__file__).parent / 'mandelbrot.png'
     fig.savefig(out, dpi=150)
     print(f'Saved: {out}')
-
+"""
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #M3
-"""
+
 if __name__ == '__main__':
     N, max_iter = 1024, 100
+    n_workers = os.cpu_count()
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    
+    mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
 
+    # Serial
     times = []
     for _ in range(3):
         t0 = time.perf_counter()
         mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
         times.append(time.perf_counter() - t0)
     t_serial = statistics.median(times)
+    print(f"Serial: {t_serial:.3f}s")
     
-    for n_workers in range(1, os.cpu_count() + 1):
-        chunk_size = max(1, N // n_workers)
-        chunks, row = [], 0
-        while row < N:
-            end = min(row + chunk_size, N)
-            chunks.append((row, end, N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
-            row = end
+    # Parallel with varying chunk sizes
+    tiny = [(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)]
+    for mult in [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]:
+        n_chunks = mult * n_workers
         with Pool(processes=n_workers) as pool:
-            pool.map(_worker, chunks)
+            pool.map(_worker, tiny)
             times = []
             for _ in range(3):
                 t0 = time.perf_counter()
-                np.vstack(pool.map(_worker, chunks))
+                mandelbrot_parallel(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_workers=n_workers, n_chunks=n_chunks, pool=pool)
                 times.append(time.perf_counter() - t0)
         t_par = statistics.median(times)
-        speedup = t_serial / t_par
-        print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
-"""
+        lif = n_workers * t_par / t_serial - 1
+        print(f"{n_chunks:4d} chunks: {t_par:.3f}s, speedup={t_serial/t_par:.1f}x, lif={lif:.2f}")
+            
+            
+
