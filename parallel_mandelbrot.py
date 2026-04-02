@@ -4,6 +4,9 @@ from multiprocessing import Pool
 import time, os, statistics, matplotlib.pyplot as plt
 from pathlib import Path
 
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------
+#M1
+
 @njit
 def mandelbrot_pixel(c_real, c_imag, max_iter):
     z_real = z_imag = 0.0
@@ -30,12 +33,8 @@ def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter
 def mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter=100):
     return mandelbrot_chunk(0, N, N, x_min, x_max, y_min, y_max, max_iter)
 
-"""
-plt.imshow(mandelbrot_serial(1024, -2, 1, -1.5, 1.5, max_iter=100), cmap="hot")
-plt.title("Mandelbrot Set")
-plt.colorbar()
-plt.show()
-"""
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------
+#M2
 
 def _worker(args):
     return mandelbrot_chunk(*args)
@@ -66,7 +65,10 @@ if __name__ == '__main__':
     fig.savefig(out, dpi=150)
     print(f'Saved: {out}')
 """
-    
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------
+#M3
+
 if __name__ == '__main__':
     N, max_iter = 1024, 100
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
