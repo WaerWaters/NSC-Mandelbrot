@@ -7,7 +7,7 @@ from pathlib import Path
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #M1
 
-@njit
+@njit(cache=True)
 def mandelbrot_pixel(c_real, c_imag, max_iter):
     z_real = z_imag = 0.0
     for i in range(max_iter):
@@ -19,7 +19,7 @@ def mandelbrot_pixel(c_real, c_imag, max_iter):
         z_real = zr2 - zi2 + c_real
     return max_iter
 
-@njit
+@njit(cache=True)
 def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter):
     out = np.empty((row_end - row_start, N), dtype=np.int32)
     dx = (x_max - x_min) / N
@@ -39,7 +39,9 @@ def mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter=100):
 def _worker(args):
     return mandelbrot_chunk(*args)
 
-def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4):
+def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4, n_chunks=None, pool=None):
+    if n_chunks is None:
+        n_chunks = n_workers
     chunk_size = max(1, N // n_workers)
     chunks = []
     row = 0
@@ -48,15 +50,19 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4
         chunks.append((row, row_end, N, x_min, x_max, y_min, y_max, max_iter))
         row = row_end
     
+    if pool is not None:
+        return np.vstack(pool.map(_worker, chunks))
+    
+    tiny = [(0, 8, 8, x_min, x_max, y_min, y_max, max_iter)]
     with Pool(processes=n_workers) as pool:
-        pool.map(_worker, chunks)
+        pool.map(_worker, tiny)
         parts = pool.map(_worker, chunks)
     
     return np.vstack(parts)
 
-"""
+
 if __name__ == '__main__':
-    result = mandelbrot_parallel(1024, -2.5, 1.0, -1.25, 1.25, n_workers=4)
+    result = mandelbrot_parallel(1024, -2.5, 1.0, -1.25, 1.25, n_workers=4, n_chunks=4*4)
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.imshow(result, extent=[-2.5, 1.0, -1.25, 1.25], cmap='inferno', origin='lower', aspect='equal')
     ax.set_xlabel('Re(c)')
@@ -64,11 +70,11 @@ if __name__ == '__main__':
     out = Path(__file__).parent / 'mandelbrot.png'
     fig.savefig(out, dpi=150)
     print(f'Saved: {out}')
-"""
+
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #M3
-
+"""
 if __name__ == '__main__':
     N, max_iter = 1024, 100
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
@@ -97,3 +103,4 @@ if __name__ == '__main__':
         t_par = statistics.median(times)
         speedup = t_serial / t_par
         print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
+"""
