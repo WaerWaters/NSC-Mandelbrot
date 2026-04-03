@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #M3
-
+"""
 if __name__ == '__main__':
     N, max_iter = 1024, 100
     n_workers = os.cpu_count()
@@ -119,19 +119,67 @@ if __name__ == '__main__':
         t_par = statistics.median(times)
         lif = n_workers * t_par / t_serial - 1
         print(f"{n_chunks:4d} chunks: {t_par:.3f}s, speedup={t_serial/t_par:.1f}x, lif={lif:.2f}")
-        
+"""
+
+if __name__ == '__main__':
+    N, max_iter = 1024, 100
+    n_workers = os.cpu_count()
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    
+    mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+
+    # Serial
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+        times.append(time.perf_counter() - t0)
+    t_serial = statistics.median(times)
+    print(f"Serial: {t_serial:.3f}s")
+    
     # Dask
     cluster = LocalCluster(n_workers=n_workers, threads_per_worker=1)
     client = Client(cluster)
     client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
     
-    times = []
-    for _ in range(3):
-        t0 = time.perf_counter()
-        mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
-        times.append(time.perf_counter() - t0)
-    print(f"Dask local (n_chunks=32): {statistics.median(times):.3f}s")
-    client.close(); cluster.close()
+    chunk_counts = [n_workers, n_workers*2, n_workers*4, n_workers*8, n_workers*16, n_workers*32, n_workers*64, n_workers*128]
+    results = []
+
+    print(f"{'n chunks':>8} | {'time (s)':>8} | {'vs 1x':>6} | {'speedup':>8} | {'LIF':>6}")
+    print("-" * 50)
+
+    for n_chunks in chunk_counts:
+        run_times = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+            run_times.append(time.perf_counter() - t0)
+        
+        tp = statistics.median(run_times)
+        speedup = t_serial / tp
+        lif = (n_workers * tp / t_serial) - 1
+        vs_1x = n_chunks / n_workers
+        
+        results.append((n_chunks, tp, lif))
+        print(f"{n_chunks:8d} | {tp:8.3f} | {vs_1x:5.1f}x | {speedup:8.1f}x | {lif:6.2f}")
+
+    n_vals = [r[0] for r in results]
+    t_vals = [r[1] for r in results]
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(n_vals, t_vals, marker='o', linestyle='-', color='b')
+    plt.xscale('log')
+    plt.xlabel('Number of Chunks (n_chunks)')
+    plt.ylabel('Wall Time (s)')
+    plt.title('Dask Chunk Sweep: Wall Time vs n_chunks')
+    plt.grid(True, which="both", ls="-", alpha=0.5)
+    plt.axvline(best_n, color='r', linestyle='--', label=f'Optimal n={best_n}')
+    plt.legend()
+    
+    plt.savefig('dask_sweep.png')
+
+    client.close()
+    cluster.close()
             
             
 
