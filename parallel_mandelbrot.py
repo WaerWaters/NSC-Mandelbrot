@@ -122,7 +122,7 @@ if __name__ == '__main__':
 """
 
 if __name__ == '__main__':
-    N, max_iter = 1024, 100
+    N, max_iter = 8192, 100
     n_workers = os.cpu_count()
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
     
@@ -138,8 +138,7 @@ if __name__ == '__main__':
     print(f"Serial: {t_serial:.3f}s")
     
     # Dask
-    cluster = LocalCluster(n_workers=n_workers, threads_per_worker=1)
-    client = Client(cluster)
+    client = Client("tcp://10.92.1.223:8786")
     client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
     
     chunk_counts = [n_workers, n_workers*2, n_workers*4, n_workers*8, n_workers*16, n_workers*32, n_workers*64, n_workers*128]
@@ -163,6 +162,7 @@ if __name__ == '__main__':
         results.append((n_chunks, tp, lif))
         print(f"{n_chunks:8d} | {tp:8.3f} | {vs_1x:5.1f}x | {speedup:8.1f}x | {lif:6.2f}")
 
+    """
     n_vals = [r[0] for r in results]
     t_vals = [r[1] for r in results]
     
@@ -177,9 +177,9 @@ if __name__ == '__main__':
     plt.legend()
     
     plt.savefig('dask_sweep.png')
-
+    """
+    
     client.close()
-    cluster.close()
             
             
 

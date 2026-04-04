@@ -19,5 +19,6 @@ Lecture 2, Milestone 4
 
 # compute_mandelbrot_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100, display=False)
 
+t, r = benchmark(compute_mandelbrot_naive_numba, -2.5, 1.0, -1.25, 1.25, 8192, 8192, 100)
 
-
+print(f"Naive Numba: {t:.4f}s")
