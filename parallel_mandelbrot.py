@@ -121,6 +121,7 @@ if __name__ == '__main__':
         print(f"{n_chunks:4d} chunks: {t_par:.3f}s, speedup={t_serial/t_par:.1f}x, lif={lif:.2f}")
 """
 
+
 if __name__ == '__main__':
     N, max_iter = 8192, 100
     n_workers = os.cpu_count()
@@ -181,5 +182,5 @@ if __name__ == '__main__':
     
     client.close()
             
-            
+
 
