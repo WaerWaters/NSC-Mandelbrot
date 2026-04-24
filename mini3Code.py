@@ -64,4 +64,4 @@ def m2():
     plt.title(r'Condition number approx $\kappa(c) = |\Delta n|\,/\,(\varepsilon_{32}\,n(c))$')
     plt.show()
 
-m2()
+# m2()
