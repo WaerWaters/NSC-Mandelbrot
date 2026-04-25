@@ -25,7 +25,7 @@ def test_analytical_points(x, y, expected):
 
 # Test 2 — cross-validation: naive oracle vs multiprocessing on a 32x32 grid
 
-def test_cross_validation_naive_vs_multiprocessed():
+def test_cross_validation_naive_vs_multiprocessing():
     RES = 32
     naive_result = naive.create_mandelbrot(res=RES, x_min=X_MIN, x_max=X_MAX, y_min=Y_MIN, y_max=Y_MAX)
     multiprocessing_result = multi_processing.create_mandelbrot(res=RES, x_min=X_MIN, x_max=X_MAX, y_min=Y_MIN, y_max=Y_MAX, workers=1, n_chunks=4)
@@ -33,14 +33,12 @@ def test_cross_validation_naive_vs_multiprocessed():
 
 
 
-# ---------------------------------------------------------------------------
 # Test 3 — dask compute function
-# ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("x, y, expected", [
     (0.0, 0.0, 100),
     (-1.0, 0.0, 100),
     (10.0, 0.0, 0),
 ])
-def test_dask_evaluate_point_matches_known_values(x, y, expected):
+def test_dask_local_get_pixel_matches_known_values(x, y, expected):
     assert dask_local.get_pixel(x=x, y=y, max_iter=100) == expected
